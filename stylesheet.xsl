@@ -9,11 +9,11 @@
 	</xsl:template>
 
 	<xsl:template name="Trailer">
-		<xsl:variable name="zeroes">000000000000000000000000000000000000000</xsl:variable>
+		<xsl:variable name="zeroes">00000000000000000000000000000</xsl:variable>
 		<xsl:variable name="cnt" select="count(/RESULTS/Alloc/Rec)"/>
 		<xsl:variable name="hash" select="sum(/RESULTS/Alloc/Rec/SBQTY)"/>
 		<xsl:text>TR0005</xsl:text>
-		<xsl:text>000000000000000000000000000000000000000</xsl:text>
+		<xsl:text>00000000000000000000000000000</xsl:text>
 		<xsl:value-of select="concat(substring($zeroes,1,8-string-length($hash)),$hash)"/>
 		<xsl:text> </xsl:text>
 		<xsl:value-of select="concat(substring($zeroes,1,5-string-length($cnt)),$cnt)"/>
