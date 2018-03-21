@@ -1,0 +1,62 @@
+<xinterface xmlns="http://www.newbreed.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" trace="false" track="false">
+<property environment="env"/>
+<property file="${config.dir}/cm.properties"/>
+<property name="root" value="${env.CM_DATA_HOME}/${clientCode}/AllocAud"/>
+<empty name="Start" smtpserver="${smtpserver}" toEmail="Vinay.Chanchlani@xpo.com" fromEmail="${fromEmail}"/>
+<dbquery name="GetData" source="Start" dataSource="omdb">
+<select tableTag="Alloc" rowTag="Rec">
+<literal>
+SELECT CASE WHEN ow.site_id = 'MTD' THEN '0899' WHEN ow.site_id = 'END' THEN '0271' WHEN ow.site_id = 'OCD' THEN '0273' END SBISS, ' ' as FEL01, nvl(substr(owd.externorderkey,1,(instr(owd.externorderkey,'-',1,1) - 1)),TO_CHAR(' ')) SBALC, ' ' as FEL02, nvl(substr(substr(owd.externorderkey,(instr(owd.externorderkey,'-',1,1) + 1),(instr(owd.externorderkey,'-',1,2) - instr(owd.externorderkey,'-',1,1) -1)),1,4),TO_CHAR(' ')) SBDES, ' ' as FEL03, RPAD(TO_CHAR(nvl(owd.item,TO_CHAR(' '))),12,TO_CHAR(' ')) SBUPC, ' ' as FEL04, RPAD(TO_CHAR(nvl(owd.status,TO_CHAR(' '))),16,TO_CHAR(' ')) SBSTS, ' ' as FEL05, nvl(LPAD(to_char(owd.orderedskuqty),7,'0'),LPAD('0',7,'0')) SBQTY, ' ' as FEL06, nvl(to_char(ow.adddate,'YYYYMMDD.HHMiSS'),RPAD(TO_CHAR(' '),15,' ')) SBORD, ' ' as FEL07, nvl(CASE WHEN owd.status = 'SHIPPED' THEN to_char(owd.editdate,'YYYYMMDD.HHMiSS') END,RPAD(TO_CHAR(' '),15,' ')) SBSHD, ' ' as FEL08, nvl(CASE WHEN owd.status = 'CANCELED' THEN to_char(owd.editdate,'YYYYMMDD.HHMiSS') END,RPAD(TO_CHAR(' '),15,' ')) AS SBCLD, ' ' as FEL09, nvl(to_char(sysdate,'YYYYMMDD.HHMiSS'),RPAD(TO_CHAR(' '),15,' ')) SBEXT, ' ' as FEL10, nvl(LPAD(to_char(owd.openqty),7,'0'),LPAD('0',7,'0')) as SBOQT, ' ' as FEL11, nvl(LPAD(to_char(owd.shippedqty),7,'0'),LPAD('0',7,'0')) as SBSQT, ' ' as FEL12, nvl(CASE WHEN owd.status = 'CANCELED' THEN LPAD(to_char(abs(owd.adjustedqty)),7,'0') END,LPAD('0',7,'0')) as SBCQT FROM oma_warehouse_order ow, oma_warehouse_orderdetail owd WHERE owd.editdate > trunc(SYSDATE - 7) AND ow.refchar4 = 'STORE' AND ow.orderkey = owd.orderkey AND owd.status in ('SHIPPED','CANCELED') union All SELECT CASE WHEN ow.site_id = 'MTD' THEN '0899' WHEN ow.site_id = 'END' THEN '0271' WHEN ow.site_id = 'OCD' THEN '0273' END SBISS, ' ' as FEL01, nvl(substr(owd.externorderkey,1,(instr(owd.externorderkey,'-',1,1) - 1)),TO_CHAR(' ')) SBALC, ' ' as FEL02, nvl(substr(substr(owd.externorderkey,(instr(owd.externorderkey,'-',1,1) + 1),(instr(owd.externorderkey,'-',1,2) - instr(owd.externorderkey,'-',1,1) -1)),1,4),TO_CHAR(' ')) SBDES, ' ' as FEL03, RPAD(TO_CHAR(nvl(owd.item,TO_CHAR(' '))),12,TO_CHAR(' ')) SBUPC, ' ' as FEL04, RPAD(TO_CHAR('OPEN'),16,TO_CHAR(' ')) as SBSTS, ' ' as FEL05, nvl(LPAD(to_char(owd.orderedskuqty),7,'0'),LPAD('0',7,'0')) SBQTY, ' ' as FEL06, nvl(to_char(ow.adddate,'YYYYMMDD.HHMiSS'),RPAD(TO_CHAR(' '),15,' ')) SBORD, ' ' as FEL07, nvl(CASE WHEN owd.status = 'SHIPPED' THEN to_char(owd.editdate,'YYYYMMDD.HHMiSS') END,RPAD(TO_CHAR(' '),15,' ')) as SBSHD, ' ' as FEL08, nvl(CASE WHEN owd.status = 'CANCELED' THEN to_char(owd.editdate,'YYYYMMDD.HHMiSS') END,RPAD(TO_CHAR(' '),15,' ')) AS SBCLD, ' ' as FEL09, nvl(to_char(sysdate,'YYYYMMDD.HHMiSS'),RPAD(TO_CHAR(' '),15,' ')) SBEXT, ' ' as FEL10, nvl(LPAD(to_char(owd.openqty),7,'0'),LPAD('0',7,'0')) as SBOQT, ' ' as FEL11, nvl(LPAD(to_char(owd.shippedqty),7,'0'),LPAD('0',7,'0')) as SBSQT, ' ' as FEL12, nvl(CASE WHEN owd.status = 'CANCELED' THEN LPAD(to_char(abs(owd.adjustedqty)),7,'0') END,LPAD('0',7,'0')) as SBCQT FROM oma_warehouse_order ow, oma_warehouse_orderdetail owd WHERE ow.refchar4 = 'STORE' AND ow.orderkey = owd.orderkey AND owd.status not in ('SHIPPED','CANCELED')
+</literal>
+</select>
+</dbquery>
+<return name="CheckForData" source="GetData" trace="true">
+<xpathequals path="count(/RESULTS/Alloc/Rec)" value="0"/>
+</return>
+<metadataset name="CreateFileName" source="CheckForData">
+<metadatavalue key="FileName">
+<literal value="stock_balancing."/>
+<timestamp format="yyyyMMdd"/>
+<literal value="."/>
+<timestamp format="HHmmss"/>
+<literal value=".txt"/>
+</metadatavalue>
+</metadataset>
+<transform name="Transform" source="CreateFileName" xslFilterFile="${config.dir}/AllocAud/1016_ALLOCATION_AUDIT1.xsl" outputType="text"/>
+<flatfileoutput name="FtpFile" source="Transform" outDir="param.OUT_DIR" tempSuffix=".wrk">
+<docname>
+<metadata key="FileName"/>
+</docname>
+<fileset>
+<include name="tds_alloc_bal_upload*"/>
+</fileset>
+</flatfileoutput>
+<flatfileoutput name="Audit" source="FtpFile" outDir="param.AUDIT_DIR" tempSuffix=".wrk">
+<docname>
+<metadata key="FileName"/>
+</docname>
+<fileset>
+<include name="stock_balancing*"/>
+</fileset>
+</flatfileoutput>
+<email name="EmailNotice" source="Audit" smtpserver="${smtpserver}" fromEmail="${fromEmail}">
+<subject>
+<parameter name="CLIENT_ID"/>
+<literal value=" Allocation Audit "/>
+<timestamp format="MM-dd-yy"/>
+</subject>
+<toemail>
+<parameter name="TO"/>
+</toemail>
+<attachment>
+<parameter name="AUDIT_DIR"/>
+<literal value="/"/>
+<metadata key="FileName"/>
+</attachment>
+<body>
+<ascii value="0x0D"/>
+<ascii value="0x0A"/>
+<literal value="View the attached file for allocation audit."/>
+</body>
+</email>
+</xinterface>
