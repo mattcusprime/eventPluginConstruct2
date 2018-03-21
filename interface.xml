@@ -14,14 +14,13 @@ SELECT CASE WHEN ow.site_id = 'MTD' THEN '0899' WHEN ow.site_id = 'END' THEN '02
 <xpathequals path="count(/RESULTS/Alloc/Rec)" value="0"/>
 </return>
 <metadataset name="CreateFileName" source="CheckForData">
-<metadatavalue key="FileName">
-<literal value="stock_balancing."/>
-<timestamp format="yyyyMMdd"/>
-<literal value="."/>
-<timestamp format="HHmmss"/>
-<literal value=".txt"/>
-</metadatavalue>
+	<metadatavalue key="FileName">
+		<literal value="stock_balancing"/>
+			<timestamp format="YYMMDDHHMM"/>
+		<literal value=".txt"/>
+	</metadatavalue>
 </metadataset>
+  
 <transform name="Transform" source="CreateFileName" xslFilterFile="${config.dir}/AllocAud/1016_ALLOCATION_AUDIT1.xsl" outputType="text"/>
 <flatfileoutput name="FtpFile" source="Transform" outDir="param.OUT_DIR" tempSuffix=".wrk">
 <docname>
