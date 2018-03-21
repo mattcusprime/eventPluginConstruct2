@@ -7,16 +7,30 @@
 		<xsl:apply-templates select="/RESULTS/Alloc/Rec"/>
 		<xsl:call-template name="Trailer"/>
 	</xsl:template>
+<xsl:function name="functx:pad-string-to-length" as="xs:string"
+				  xmlns:functx="http://www.functx.com">
+	  <xsl:param name="stringToPad" as="xs:string?"/>
+	  <xsl:param name="padChar" as="xs:string"/>
+	  <xsl:param name="length" as="xs:integer"/>
 
+	  <xsl:sequence select="
+	   substring(
+		 string-join (
+		   ($stringToPad, for $i in (1 to $length) return $padChar)
+		   ,'')
+		,1,$length)
+	 "/>
+
+	</xsl:function>
+	
+	
 	<xsl:template name="Trailer">
-		<xsl:variable name="zeroes">00000000000000000000000000000</xsl:variable>
 		<xsl:variable name="cnt" select="count(/RESULTS/Alloc/Rec)"/>
 		<xsl:variable name="hash" select="sum(/RESULTS/Alloc/Rec/SBQTY)"/>
 		<xsl:text>TR0005</xsl:text>
-		<xsl:text>00000000000000000000000000000</xsl:text>
-		<xsl:value-of select="concat(substring($zeroes,1,8-string-length($hash)),$hash)"/>
+		<xsl:value-of select="concat(functx:pad-string-to-length($hash, '0', 25)" />
 		<xsl:text> </xsl:text>
-		<xsl:value-of select="concat(substring($zeroes,1,5-string-length($cnt)),$cnt)"/>
+		<xsl:value-of select="concat(functx:pad-string-to-length($cnt, '0', 6)" />
 	</xsl:template>
 
 
